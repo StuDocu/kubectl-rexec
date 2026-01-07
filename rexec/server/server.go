@@ -49,6 +49,41 @@ func Server() {
 	http.ListenAndServeTLS(":8443", "/etc/pki/rexec/tls.crt", "/etc/pki/rexec/tls.key", r)
 }
 
+// getClientIP extracts the client IP address from HTTP headers or falls back to RemoteAddr
+// Checks headers in order: X-Forwarded-For, X-Real-IP, X-Original-Forwarded-For
+func getClientIP(r *http.Request) string {
+	// Check X-Forwarded-For header (can contain multiple IPs, comma-separated)
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		// Take the first IP if multiple are present
+		ips := strings.Split(xff, ",")
+		if len(ips) > 0 {
+			ip := strings.TrimSpace(ips[0])
+			if ip != "" {
+				return ip
+			}
+		}
+	}
+
+	// Check X-Real-IP header
+	if xri := r.Header.Get("X-Real-IP"); xri != "" {
+		return xri
+	}
+
+	// Check X-Original-Forwarded-For header
+	if xoff := r.Header.Get("X-Original-Forwarded-For"); xoff != "" {
+		ips := strings.Split(xoff, ",")
+		if len(ips) > 0 {
+			ip := strings.TrimSpace(ips[0])
+			if ip != "" {
+				return ip
+			}
+		}
+	}
+
+	// Fall back to RemoteAddr
+	return r.RemoteAddr
+}
+
 // rexecHandler is responsible for rewrite the request to an exec request
 // and proxy it back to k8s api
 func rexecHandler(w http.ResponseWriter, r *http.Request) {
@@ -115,8 +150,8 @@ func rexecHandler(w http.ResponseWriter, r *http.Request) {
 			needsRecording = true
 		}
 	}
-	
-	remoteAddr := r.RemoteAddr
+
+	remoteAddr := getClientIP(r)
 
 	if !needsRecording {
 		// if we dont need any recording, we just pass the request back to the kube apiserver
