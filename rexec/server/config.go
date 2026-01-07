@@ -12,6 +12,10 @@ import (
 var token string
 var proxyMap map[string]bool
 var userMap map[string]string
+var namespaceMap map[string]string
+var podMap map[string]string
+var containerMap map[string]string
+var remoteAddrMap map[string]string
 var mapSync sync.Mutex
 var SysLogger zerolog.Logger
 var auditLogger zerolog.Logger
@@ -50,6 +54,10 @@ func Init() {
 	token = string(rawToken)
 	proxyMap = make(map[string]bool)
 	userMap = make(map[string]string)
+	namespaceMap = make(map[string]string)
+	podMap = make(map[string]string)
+	containerMap = make(map[string]string)
+	remoteAddrMap = make(map[string]string)
 	commandMap = make(map[string][]byte)
 	asyncAuditChan = make(chan asyncAudit)
 
@@ -69,8 +77,26 @@ func Init() {
 	go asyncAuditor()
 }
 
-func logCommand(command, user, ctxid string) {
-	auditLogger.Info().Str("user", user).Str("session", ctxid).Str("command", command).Msg("")
+func logCommand(command, user, ctxid, namespace, pod, container, remoteAddr string) {
+	logEvent := auditLogger.Info().
+		Str("user", user).
+		Str("session", ctxid).
+		Str("command", command)
+	
+	if namespace != "" {
+		logEvent = logEvent.Str("namespace", namespace)
+	}
+	if pod != "" {
+		logEvent = logEvent.Str("pod", pod)
+	}
+	if container != "" {
+		logEvent = logEvent.Str("container", container)
+	}
+	if remoteAddr != "" {
+		logEvent = logEvent.Str("remote_addr", remoteAddr)
+	}
+	
+	logEvent.Msg("")
 }
 
 var httpSpec = `
