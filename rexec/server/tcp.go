@@ -73,6 +73,10 @@ func tcpForwarder(ctx context.Context) {
 	mapSync.Lock()
 	delete(proxyMap, ctxid)
 	delete(userMap, ctxid)
+	delete(namespaceMap, ctxid)
+	delete(podMap, ctxid)
+	delete(containerMap, ctxid)
+	delete(remoteAddrMap, ctxid)
 	mapSync.Unlock()
 
 	commandSync.Lock()

@@ -28,16 +28,27 @@ func storeOrFlush(audit asyncAudit) {
 			commandSync.Unlock()
 		case 13:
 			commandSync.Lock()
-			logCommand(string(commandMap[audit.ctxid]), userMap[audit.ctxid], audit.ctxid)
+			command := string(commandMap[audit.ctxid])
 			commandMap[audit.ctxid] = nil
 			commandSync.Unlock()
+			
+			mapSync.Lock()
+			logCommand(command, userMap[audit.ctxid], audit.ctxid, namespaceMap[audit.ctxid], podMap[audit.ctxid], containerMap[audit.ctxid], remoteAddrMap[audit.ctxid])
+			mapSync.Unlock()
 		default:
 			commandSync.Lock()
 			// to prevent oom kills by shoving too much input into one line
 			// we flush after the amount of strokes set in MaxStokesPerLine
 			if len(commandMap[audit.ctxid]) > MaxStokesPerLine {
-				logCommand(string(commandMap[audit.ctxid]), userMap[audit.ctxid], audit.ctxid)
+				command := string(commandMap[audit.ctxid])
 				commandMap[audit.ctxid] = nil
+				commandSync.Unlock()
+				
+				mapSync.Lock()
+				logCommand(command, userMap[audit.ctxid], audit.ctxid, namespaceMap[audit.ctxid], podMap[audit.ctxid], containerMap[audit.ctxid], remoteAddrMap[audit.ctxid])
+				mapSync.Unlock()
+				
+				commandSync.Lock()
 			}
 			commandMap[audit.ctxid] = append(commandMap[audit.ctxid], ascii)
 			commandSync.Unlock()
