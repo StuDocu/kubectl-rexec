@@ -1,4 +1,4 @@
-module github.com/adyen/kubectl-rexec
+module github.com/StuDocu/kubectl-rexec
 
 go 1.24.0
 
