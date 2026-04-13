@@ -15,7 +15,7 @@ kustomize build manifests/ | kubectl -n kube-system apply -f -
 Ensure that you go bin directory is in the path.
 
 ```
-go install github.com/adyen/kubectl-rexec@latest
+go install github.com/StuDocu/kubectl-rexec@latest
 ```
 
 ## Observe events 

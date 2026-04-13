@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/adyen/kubectl-rexec/rexec/server"
+	"github.com/StuDocu/kubectl-rexec/rexec/server"
 	"github.com/spf13/cobra"
 )
 
